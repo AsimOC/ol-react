@@ -464,8 +464,8 @@ const rem = ()=>{
     <div>
        <div >
 
-      <Modal title="Basic Modal" visible={isModalVisible} onOk={handleOk} onCancel={handleCancel} style={{position:"absolute",left:"30%",}}>
-        <p style={{fontSize:"50px",fontWeight:"400",fontFamily:"initial"}}>
+      <Modal title="Feature PopUp" visible={isModalVisible} onOk={handleOk} onCancel={handleCancel} style={{position:"absolute",left:"30%",}}>
+        <p style={{fontSize:"50px",fontWeight:"400",fontFamily:"initial",textAlign:"center",height:"30px"}}>
         Feature type: {featureType}
         </p>
       </Modal>
