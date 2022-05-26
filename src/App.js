@@ -1,6 +1,7 @@
 import * as ol from "ol"
 import "ol/ol.css";
 import "./App.css"
+import{Interaction as interaction} from "ol"
 import Feature from "ol/Feature";
 import Map from "ol/Map";
 import Point from "ol/geom/Point";
@@ -19,8 +20,10 @@ import marki from "./marker4.png"
 import React from "react";
 import portland from "./assets/portland.geojson"
 import { transform } from 'ol/proj';
-import { Modify,  Draw, Snap } from 'ol/interaction';
-
+import {   Draw, Snap } from 'ol/interaction';
+import {Modify} from "ol/interaction"
+import { Button, Modal } from 'antd';
+import 'antd/dist/antd.css';
 import VectorTileLayer from 'ol/layer/VectorTile';
 import VectorTileSource from 'ol/source/VectorTile';
 import {
@@ -33,6 +36,7 @@ import {
   MousePosition,
   OverviewMap,
 } from "ol/control";
+import { set } from "ol/transform";
 function App (){
 //const myref = React.createRef();
 //   const [distanceInput,setDistanceInput]=useState();
@@ -47,8 +51,7 @@ function App (){
 //   setMinDistanceInput(e.target.value);
 //   console.log("value",e.target.value);
 // }
-const [rpoint, setPoint] = useState(false);
-const [rcircle, setrcircle] = useState(false);
+const [isModalVisible, setIsModalVisible] = useState(false);
 const [source, setSource] = useState(
   new VectorSource({
     url: portland,
@@ -59,12 +62,14 @@ const [source, setSource] = useState(
 let map;
 const mapElement = useRef();
 const mapRef = useRef();
- 
 mapRef.current = map;
 let draw = Draw;
 let modify = Modify;
+const styleCache = {};
 var info;
 var overlay;
+let displayStyle = 'none';
+const[featureType,setFeatureType]=useState("null");
 const key =
 "pk.eyJ1IjoidXNtYW4tZ2hhdXJpIiwiYSI6ImNsMzRnNm9lczE3MzMzZHBmejFwb3RtNHgifQ.x89dbT1H4iK7NQaKnkbxQw";
 
@@ -141,7 +146,7 @@ let styles = {
   }),
 };
 
-const styleCache = {};
+
 var fill = [
   {
     size: 0,
@@ -307,29 +312,45 @@ useEffect(() => {
   if (map) {
     map.addInteraction(new Snap({ source }));
    
-  
+    map.on('singleclick', (evt) => {
+      // Perform Task on click
+      // this.displayFeatureInfo(evt.pixel, info); // Disabled this method for tooltip vs popup
+      debugger;
+      // TODO: You need to remove draw/modify interation to test this
+      const feature = map.forEachFeatureAtPixel(
+        evt.pixel,
+        (feature) => {
+          return feature;
+        }
+      );
+      if (feature) {
+        setFeatureType( feature.getGeometry().getType());
+        showModal();
+      }
+    });
    
-
-    // modify.on("modifystart", (event) => {});
-
-    // addFeature();
-    // map.on("click", () => {
-    //   console.log("postclick,");
-    // });
+ 
   }
  
   return () => map.setTarget(undefined);
 
-}, [map]);
-// useEffect(()=>{
-//   if(map){
-//     map.addInteraction(new Draw({
-//       source,
-//       type: "Point",
-//     }))
-//   }
-// },[])
+});
+const showModal = () => {
+  setIsModalVisible(true);
+};
+
+const handleOk = () => {
+  setIsModalVisible(false);
+};
+
+const handleCancel = () => {
+  setIsModalVisible(false);
+};
+
+ 
 const d =(e)=>{ 
+  
+  
 map.removeInteraction(draw);
 
   draw = new Draw({
@@ -385,7 +406,6 @@ const tranformProjection = (feature, coordinates)=> {
 const showHideLayer = (event)=> {
   map.getLayers().forEach((lr) => {
     if (lr.getProperties()['id'] === 'main-layer') {
-      debugger;
       lr.setVisible((event.target).checked);
     }
   });
@@ -394,7 +414,6 @@ const showHideClusterLayer = (event)=> {
   map.getLayers().forEach((lr) => {
 
     if (lr.getProperties()['id'] === 'cluster-layer') {
-      debugger;
       lr.setVisible((event.target).checked);
     }
   });
@@ -403,7 +422,6 @@ const showHideHeatLayer = (event)=> {
   map.getLayers().forEach((lr) => {
 
     if (lr.getProperties()['id'] === 'heat-layer') {
-      debugger;
       lr.setVisible((event.target).checked);
     }
   });
@@ -429,8 +447,29 @@ const manageInteractions = (event) => {
     map.addInteraction(modify);
   }
 };
+const rem = ()=>{
+  map.getInteractions().forEach((interaction) => {
+    if(interaction=="Modify"){
+      debugger;
+      map.removeInteraction(interaction);
+
+    }
+  });
+  map.getInteractions().forEach((interaction) => {
+
+  console.log("after removing ", interaction )
+});
+}
   return (
     <div>
+       <div >
+
+      <Modal title="Basic Modal" visible={isModalVisible} onOk={handleOk} onCancel={handleCancel} style={{position:"absolute",left:"30%",}}>
+        <p style={{fontSize:"50px",fontWeight:"400",fontFamily:"initial"}}>
+        Feature type: {featureType}
+        </p>
+      </Modal>
+    </div>
       <div id="map" ref={mapElement} className="map">
         <div className="layer-switcher">
           <input
@@ -493,7 +532,10 @@ const manageInteractions = (event) => {
           </div>
         </div>
       </div>
+     
     </div>
   );
+
+ 
 }
 export default App;
