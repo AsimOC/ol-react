@@ -47,7 +47,10 @@ import {
 import { set } from "ol/transform";
 import buffer from '@turf/buffer';
 import { polygon } from '@turf/turf';
+import { io,operation } from "jsts";
 
+
+// const jsts = require("jsts")
 function App() {
   //const myref = React.createRef();
   //   const [distanceInput,setDistanceInput]=useState();
@@ -71,6 +74,7 @@ function App() {
   );
   //const [map,setMap]=useState();
   let map;
+  // const jsts = require("jsts")
   const mapElement = useRef();
   const mapRef = useRef();
   mapRef.current = map;
@@ -289,8 +293,8 @@ function App() {
     initialMap = new Map({
       layers: [
         tileLayer,
-        vectorLayer1,
-        vectorLayer2,
+         vectorLayer1,
+         vectorLayer2,
         getHeatMapLayer,
         clusters,
       ],
@@ -320,38 +324,93 @@ function App() {
           }
         });
       });
-
+      debugger
       addFeature();
     }
 
     return () => map.setTarget(undefined);
-  });
+  },[]);
   useEffect(() => {
     if (map) {
       map.addInteraction(new Snap({ source }));
-      
-
-
-
-
-      map.on("singleclick", (evt) => {
-        // Perform Task on click
-        // this.displayFeatureInfo(evt.pixel, info); // Disabled this method for tooltip vs popup
-        debugger;
-        // TODO: You need to remove draw/modify interation to test this
-        const feature = map.forEachFeatureAtPixel(evt.pixel, (feature) => {
-          return feature;
-        });
-        if (feature) {
-          setFeatureType(feature.getGeometry().getType());
-          showModal();
-        }
+      draw = new Draw({
+        source,
+        type: 'LineString',
+        // TODO: BElow is the available draw types provided by Openlayers
+        // Point
+        // LineString
+        // Polygon
+        // Circle
       });
+   debugger;
+      map.addInteraction(draw);
+      draw.on('drawend', (event) => {
+        debugger;
+        // Perform Task on when interaction ends
+        let polygonArray  = [];
+        let layer = getLayer('main-layer');
+        layer
+          .getSource()
+          .getFeatures()
+          .forEach((feat) => {
+            if (feat.getGeometry().getType() === 'Point') {
+              debugger;
+              return;}
+            // jsts polygon spilliting code
+            const reader = new  io.WKTReader();
+            const writer = new  io.WKTWriter();
+            const format = new WKT();
+  
+            const p = reader.read(format.writeGeometry(feat.getGeometry()));
+            const result = operation.valid.IsValidOp.isValid(p);
+            if (!result) return;
+            let parcel = reader.read(format.writeGeometry(feat.getGeometry()));
+            let line = reader.read(
+              format.writeGeometry(event.feature.getGeometry())
+            );
+            let union = parcel.getBoundary().union(line);
+             let polygonizer = new operation.polygonize.Polygonizer();
+            polygonizer.add(union);
+            let polygons = polygonizer.getPolygons();
+            for (var i = polygons.iterator(); i.hasNext(); ) {
+              let polygon = i.next();
+              let feature = format.readFeature(writer.write(polygon));
+              polygonArray.push(feature.clone());
+            }
+          });
+  
+        //layer.getSource().clear();
+        layer.getSource().addFeatures([...polygonArray]);
+        // remove feature is feature type is linestring. We have to remove the line that has splitted the polygon geometry
+        layer.getSource().on('addfeature', (evt ) => {
+          debugger;
+          if (evt.feature.getGeometry().getType() === 'LineString')
+            layer.getSource().removeFeature(evt.feature);
+        });
+        
+      });
+
+
+
+
+      // map.on("singleclick", (evt) => {
+      //   // Perform Task on click
+      //   // this.displayFeatureInfo(evt.pixel, info); // Disabled this method for tooltip vs popup
+      //   debugger;
+      //   // TODO: You need to remove draw/modify interation to test this
+      //   const feature = map.forEachFeatureAtPixel(evt.pixel, (feature) => {
+      //     return feature;
+      //   });
+      //   if (feature) {
+      //     setFeatureType(feature.getGeometry().getType());
+      //     showModal();
+      //   }
+      // });
       addBufferedPolygon();
     }
 
     return () => map.setTarget(undefined);
-  });
+  },[]);
   const showModal = () => {
     setIsModalVisible(true);
   };
