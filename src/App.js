@@ -16,13 +16,13 @@ import {
   MousePosition,
   OverviewMap,
 } from "ol/control";
-import VectorLayer from 'ol/layer/Vector';
-import VectorSource from 'ol/source/Vector';
-import { GeoJSON, MVT } from 'ol/format';
-import { Fill, Icon, Stroke, Style, Text } from 'ol/style';
-import VectorTileLayer from 'ol/layer/VectorTile';
-import VectorTileSource from 'ol/source/VectorTile';
-import portland from "./assets/portland.geojson"
+import VectorLayer from "ol/layer/Vector";
+import VectorSource from "ol/source/Vector";
+import { GeoJSON, MVT } from "ol/format";
+import { Fill, Icon, Stroke, Style, Text } from "ol/style";
+import VectorTileLayer from "ol/layer/VectorTile";
+import VectorTileSource from "ol/source/VectorTile";
+import portland from "./assets/portland.geojson";
 const App = () => {
   const [source, setSource] = useState(
     new VectorSource({
@@ -47,7 +47,7 @@ const App = () => {
     source, //source declared above as usestate is being used as source here
     style: new Style({
       stroke: new Stroke({
-        color: 'red',
+        color: "red",
         width: 2,
       }),
     }),
@@ -55,6 +55,21 @@ const App = () => {
       id: "main-layer",
       name: "Portaland",
     },
+  });
+  const vectorLayer2 = new VectorTileLayer({
+    declutter: true,
+    source: new VectorTileSource({
+      attributions:
+        '© <a href="https://www.mapbox.com/map-feedback/">Mapbox</a> ',
+      // +'© <a href="https://www.openstreetmap.org/copyright">' +
+      // 'OpenStreetMap contributors</a>'
+      format: new MVT(),
+      // url:
+      //   'https://{a-d}.tiles.mapbox.com/v4/mapbox.mapbox-streets-v6/' +
+      //   '{z}/{x}/{y}.vector.pbf?access_token=' +
+      //     key,
+    }),
+    // style: createMapboxStreetsV6Style(Style, Fill, Stroke, Icon, Text),TODO: You can styles it as you want using mapbox
   });
   const functions = defaults().extend([
     new ScaleLine(),
@@ -68,7 +83,7 @@ const App = () => {
   useEffect(() => {
     map = new Map({
       target: mapElement.current,
-      layers: [tileLayer,vectorLayer1],
+      layers: [tileLayer, vectorLayer1, vectorLayer2],
       view: mapView,
       controls: functions,
     });
