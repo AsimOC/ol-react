@@ -71,6 +71,16 @@ const App = () => {
     }),
     // style: createMapboxStreetsV6Style(Style, Fill, Stroke, Icon, Text),TODO: You can styles it as you want using mapbox
   });
+
+  //note that following layer wont be working becuase the provided url is not active anymore.
+  const vectorLayer3 =    new VectorTileLayer({
+    source: new VectorTileSource({
+      // Please do not use this service this is for demo only. TODO: add your own service URL here
+     // url: 'http://3.106.156.204:8080/geoserver/gwc/service/tms/1.0.0/farmfoundation:nz_parcels@EPSG%3A900913@pbf/{z}/{x}/{-y}.pbf',
+      format: new MVT(),
+    }),
+    visible: true,
+  })
   const functions = defaults().extend([
     new ScaleLine(),
     new Rotate(),
@@ -83,7 +93,7 @@ const App = () => {
   useEffect(() => {
     map = new Map({
       target: mapElement.current,
-      layers: [tileLayer, vectorLayer1, vectorLayer2],
+      layers: [tileLayer, vectorLayer1, vectorLayer2,vectorLayer3],
       view: mapView,
       controls: functions,
     });
