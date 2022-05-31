@@ -26,7 +26,8 @@ import { Circle, Fill, Icon, Stroke, Style, Text } from "ol/style";
 import marker from "./assets/marker4.png";
 import Feature from "ol/Feature";
 import Point from "ol/geom/Point";
-//in branch 7, the contents of portland.geojson file has bee updated
+import { transform } from "ol/proj";
+
 const App = () => {
   const [source, setSource] = useState(
     new VectorSource({
@@ -191,6 +192,13 @@ const App = () => {
       }
     });
     layer && layer.getSource().addFeature(feature);
+  };
+  //following function is used to transofrm projection
+  const tranformProjection = (feature, coordinates) => {
+    // Transforms a coordinate from source projection to destination projection. This returns a new coordinate (and does not modify the original).
+    let trans = transform(coordinates, "EPSG:3857", "EPSG:4326");
+    // Geometry can be also be transformed from one projection to some other projection.
+    feature.getGeometry().transform("EPSG:4326", "EPSG:3857");
   };
   return <div className="map" ref={mapElement}></div>;
 };
