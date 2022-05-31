@@ -24,6 +24,9 @@ import VectorTileSource from "ol/source/VectorTile";
 import portland from "./assets/portland.geojson";
 import { Circle, Fill, Icon, Stroke, Style, Text } from "ol/style";
 import marker from "./assets/marker4.png";
+import Feature from "ol/Feature";
+import Point from "ol/geom/Point";
+//in branch 7, the contents of portland.geojson file has bee updated
 const App = () => {
   const [source, setSource] = useState(
     new VectorSource({
@@ -162,9 +165,33 @@ const App = () => {
       view: mapView,
       controls: functions,
     });
+    addFeature();
     //clean up function to set the target to undefined to avoid the map the appearing for twice on screen
     return () => map.setTarget(undefined);
   }, []);
+
+  //utility functions such as add-remove-transform etc. will be defined onwards
+  // add a feature to a specific layer i.e. 'main-layer'
+  const addFeature = () => {
+    let markerFeature = new Feature({ geometry: new Point([0, 0]) });
+    let layer;
+    map.getLayers().forEach((lr) => {
+      if (lr.getProperties()["id"] === "main-layer") {
+        layer = lr;
+      }
+    });
+    layer && layer.getSource().addFeature(markerFeature);
+  };
+  // Remove a feature from a specific layer i.e. 'main-layer'
+  const removeFeature = (feature) => {
+    let layer;
+    map.getLayers().forEach((lr) => {
+      if (lr.getProperties()["id"] === "main-layer") {
+        layer = lr;
+      }
+    });
+    layer && layer.getSource().addFeature(feature);
+  };
   return <div className="map" ref={mapElement}></div>;
 };
 export default App;
