@@ -2,7 +2,7 @@ import Map from "ol/Map";
 import View from "ol/View";
 import TileLayer from "ol/layer/Tile";
 import XYZ from "ol/source/XYZ";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { OSM } from "ol/source";
 import "./App.css";
 import "ol/ol.css";
@@ -16,8 +16,20 @@ import {
   MousePosition,
   OverviewMap,
 } from "ol/control";
-
+import VectorLayer from 'ol/layer/Vector';
+import VectorSource from 'ol/source/Vector';
+import { GeoJSON, MVT } from 'ol/format';
+import { Fill, Icon, Stroke, Style, Text } from 'ol/style';
+import VectorTileLayer from 'ol/layer/VectorTile';
+import VectorTileSource from 'ol/source/VectorTile';
+import portland from "./assets/portland.geojson"
 const App = () => {
+  const [source, setSource] = useState(
+    new VectorSource({
+      url: portland,
+      format: new GeoJSON(),
+    })
+  );
   let map;
   const mapElement = useRef();
   const mapRef = useRef();
@@ -31,7 +43,19 @@ const App = () => {
     center: [0, 0],
     zoom: 2,
   });
-
+  const vectorLayer1 = new VectorLayer({
+    source, //source declared above as usestate is being used as source here
+    style: new Style({
+      stroke: new Stroke({
+        color: 'red',
+        width: 2,
+      }),
+    }),
+    properties: {
+      id: "main-layer",
+      name: "Portaland",
+    },
+  });
   const functions = defaults().extend([
     new ScaleLine(),
     new Rotate(),
@@ -44,7 +68,7 @@ const App = () => {
   useEffect(() => {
     map = new Map({
       target: mapElement.current,
-      layers: [tileLayer],
+      layers: [tileLayer,vectorLayer1],
       view: mapView,
       controls: functions,
     });
