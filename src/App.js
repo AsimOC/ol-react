@@ -200,6 +200,26 @@ const App = () => {
     // Geometry can be also be transformed from one projection to some other projection.
     feature.getGeometry().transform("EPSG:4326", "EPSG:3857");
   };
-  return <div className="map" ref={mapElement}></div>;
+  const showHideLayer = (event) => {
+    map.getLayers().forEach((lr) => {
+      if (lr.getProperties()["id"] === "main-layer") {
+        lr.setVisible(event.target.checked);
+      }
+    });
+  };
+  return (
+    <div className="map" ref={mapElement}>
+      <div class="layer-switcher">
+        <input
+          type="checkbox"
+          name="main-layer"
+          id="lr"
+          defaultChecked
+          onChange={showHideLayer}
+        />
+        <label for="lr">Show/Hide Main Layer</label>
+      </div>
+    </div>
+  );
 };
 export default App;
