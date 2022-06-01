@@ -26,6 +26,7 @@ import marker from "./assets/marker4.png";
 import Feature from "ol/Feature";
 import Point from "ol/geom/Point";
 import { transform } from "ol/proj";
+import { Modify, Draw, Snap } from 'ol/interaction';
 
 const App = () => {
   const [source, setSource] = useState(
@@ -34,7 +35,7 @@ const App = () => {
       format: new GeoJSON(),
     })
   );
-  let map;
+  let map,draw,modify;
   const mapElement = useRef();
   const mapRef = useRef();
   mapRef.current = map;
@@ -182,6 +183,26 @@ const App = () => {
       console.log("single clicked"); //open console and make a single click to view the resutl
     });
 
+    draw = new Draw({
+      source,
+      type: 'LineString',
+      // TODO: BElow is the available draw types provided by Openlayers
+      // Point
+      // LineString
+      // Polygon
+      // Circle
+    });
+
+    // Add Draw line interaction on map
+    map.addInteraction(draw);
+    modify = new Modify({ source });
+
+    // capture event on modify start
+    modify.on('modifystart', (event) => {});
+
+    // capture event on modify end
+    modify.on('modifyend', (event) => {});
+
     //clean up function to set the target to undefined to avoid the map the appearing for twice on screen
     return () => map.setTarget(undefined);
   }, []);
@@ -222,6 +243,18 @@ const App = () => {
       }
     });
   };
+
+  const manageInteractions = (event) => {
+    if ((event.target).value === 'draw') {
+      map.addInteraction(draw);
+      map.removeInteraction(modify);
+      debugger;
+     } else {
+      map.removeInteraction(draw);
+      map.addInteraction(modify);
+    }
+  };
+
   return (
     <div className="map" ref={mapElement}>
       <div className="layer-switcher">
@@ -232,8 +265,27 @@ const App = () => {
           defaultChecked
           onChange={showHideLayer}
         />
-        <label htmlFor="lr">Show/Hide Main Layer</label>
+        <label htmlFor="lr">Show/Hide Main Layer</label><br/>
+        <input
+        type="radio"
+        name="interactions"
+        value="draw"
+        id="r-lr"
+        defaultChecked
+        onChange={manageInteractions}
+      />
+      <label htmlFor="r-lr">Draw</label>
+      <input
+        type="radio"
+        name="interactions"
+        value="modify"
+        id="r1-lr"
+        onChange={manageInteractions}
+      />
+      <label htmlFor="r1-lr">Modify</label>
       </div>
+      <div> 
+    </div>
     </div>
   );
 };
