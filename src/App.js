@@ -3,7 +3,6 @@ import View from "ol/View";
 import TileLayer from "ol/layer/Tile";
 import XYZ from "ol/source/XYZ";
 import { useEffect, useRef, useState } from "react";
-import { OSM } from "ol/source";
 import "./App.css";
 import "ol/ol.css";
 import {
@@ -22,7 +21,7 @@ import { GeoJSON, MVT } from "ol/format";
 import VectorTileLayer from "ol/layer/VectorTile";
 import VectorTileSource from "ol/source/VectorTile";
 import portland from "./assets/portland.geojson";
-import { Circle, Fill, Icon, Stroke, Style, Text } from "ol/style";
+import { Circle, Fill, Icon, Stroke, Style } from "ol/style";
 import marker from "./assets/marker4.png";
 import Feature from "ol/Feature";
 import Point from "ol/geom/Point";
@@ -167,6 +166,22 @@ const App = () => {
       controls: functions,
     });
     addFeature();
+
+    // TODO: Below is the list of all the event listners available on map instance
+    // singleclick: A true single click with no dragging and no double click. This event is delayed 250ms to ensure that it’s not a double click
+    // postrender: Triggered after map is rendered
+    // pointermove: Triggered when pointer is moved
+    // pointerdrag: Triggered when pointer is dragged
+    // movestart: Triggered when map starts moving
+    // moveend: Triggered after map is moved
+    // dblclick: A true double click with no dragging
+    // click: A single click with no dragging. Double click will fire two events
+
+    //Creating a Map Click Event Listener
+    map.on("singleclick", function (e) {
+      console.log("single clicked"); //open console and make a single click to view the resutl
+    });
+
     //clean up function to set the target to undefined to avoid the map the appearing for twice on screen
     return () => map.setTarget(undefined);
   }, []);
@@ -209,7 +224,7 @@ const App = () => {
   };
   return (
     <div className="map" ref={mapElement}>
-      <div class="layer-switcher">
+      <div className="layer-switcher">
         <input
           type="checkbox"
           name="main-layer"
@@ -217,7 +232,7 @@ const App = () => {
           defaultChecked
           onChange={showHideLayer}
         />
-        <label for="lr">Show/Hide Main Layer</label>
+        <label htmlFor="lr">Show/Hide Main Layer</label>
       </div>
     </div>
   );
