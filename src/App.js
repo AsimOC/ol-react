@@ -1,6 +1,6 @@
 import Map from "ol/Map";
 import View from "ol/View";
-import TileLayer from "ol/layer/Tile";
+ 
 import XYZ from "ol/source/XYZ";
 import { useEffect, useRef, useState } from "react";
 import "./App.css";
@@ -15,18 +15,21 @@ import {
   MousePosition,
   OverviewMap,
 } from "ol/control";
-import VectorLayer from "ol/layer/Vector";
-import VectorSource from "ol/source/Vector";
+ import VectorSource from "ol/source/Vector";
 import { GeoJSON, MVT } from "ol/format";
+import { Tile as TileLayer, Vector as VectorLayer } from "ol/layer";
+
 import VectorTileLayer from "ol/layer/VectorTile";
 import VectorTileSource from "ol/source/VectorTile";
 import portland from "./assets/portland.geojson";
-import { Circle, Fill, Icon, Stroke, Style } from "ol/style";
+import { Circle, Circle as CircleStyle, Fill, Icon, Stroke, Style, Text } from "ol/style";
 import marker from "./assets/marker4.png";
 import Feature from "ol/Feature";
 import Point from "ol/geom/Point";
 import { transform } from "ol/proj";
 import { Modify, Draw, Snap } from 'ol/interaction';
+import url from "./assets/data.geojson"
+import ClusterSource from 'ol/source/Cluster';
 
 const App = () => {
   const [source, setSource] = useState(
@@ -35,6 +38,14 @@ const App = () => {
       format: new GeoJSON(),
     })
   );
+  
+let source2 = new ClusterSource({
+  distance: 20,
+  source: new VectorSource({
+    url: url,
+    format: new GeoJSON(),
+  }),
+});
   let map,draw,modify;
   const mapElement = useRef();
   const mapRef = useRef();
@@ -159,10 +170,90 @@ const App = () => {
     new OverviewMap(),
   ]);
 
+  const styleCache = {};
+  var fill = [
+    {
+      size: 0,
+      color: '#3399CC',
+    },
+    {
+      size: 15,
+      color: '#FABA3E',
+    },
+    {
+      size: 50,
+      color: '#EF4A37',
+    },
+  ];
+  const clusters = new VectorLayer({
+    source: source2,
+    style: function (feature) {
+      const size = feature.get("features").length;
+      let style = styleCache[size];
+      var tempFill;
+      fill.forEach((element) => {
+        if (size > element.size) {
+          tempFill = element.color;
+        }
+      });
+      if (!style) {
+        style = clusterStyles(tempFill, size);
+        styleCache[size] = style;
+      }
+      return style;
+    },
+    properties: {
+      id: 'cluster-layer',
+      name: 'Portaland',
+    }
+  });
+  const clusterStyles =(tempFill, size) =>{
+    return [
+      new Style({
+        image: new CircleStyle({
+          radius: 10,
+          stroke: new Stroke({
+            color: '#fff',
+          }),
+          fill: new Fill({
+            color: tempFill,
+          }),
+        }),
+        text: new Text({
+          text: size.toString(),
+          fill: new Fill({
+            color: '#fff',
+          }),
+        }),
+      }),
+      new Style({
+        image: new CircleStyle({
+          radius: 12,
+          stroke: new Stroke({
+            color: tempFill,
+            lineDash: [9, 5],
+            lineCap: 'round',
+            width: 2,
+          }),
+        }),
+      }),
+      new Style({
+        image: new CircleStyle({
+          radius: 14,
+          stroke: new Stroke({
+            color: tempFill,
+            lineDash: [8, 9],
+            lineCap: 'round',
+            width: 2,
+          }),
+        }),
+      }),
+    ];
+  }
   useEffect(() => {
     map = new Map({
       target: mapElement.current,
-      layers: [tileLayer, vectorLayer1, vectorLayer2, vectorLayer3],
+      layers: [tileLayer, vectorLayer1, vectorLayer2, clusters],
       view: mapView,
       controls: functions,
     });
@@ -205,7 +296,7 @@ const App = () => {
 
     //clean up function to set the target to undefined to avoid the map the appearing for twice on screen
     return () => map.setTarget(undefined);
-  }, []);
+  } );
 
   //utility functions such as add-remove-transform etc. will be defined onwards
   // add a feature to a specific layer i.e. 'main-layer'
