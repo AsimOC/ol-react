@@ -17,8 +17,7 @@ import {
 } from "ol/control";
  import VectorSource from "ol/source/Vector";
 import { GeoJSON, MVT } from "ol/format";
-import { Tile as TileLayer, Vector as VectorLayer } from "ol/layer";
-
+import { Tile as TileLayer, Vector as VectorLayer } from "ol/layer"; 
 import VectorTileLayer from "ol/layer/VectorTile";
 import VectorTileSource from "ol/source/VectorTile";
 import portland from "./assets/portland.geojson";
@@ -30,6 +29,7 @@ import { transform } from "ol/proj";
 import { Modify, Draw, Snap } from 'ol/interaction';
 import url from "./assets/data.geojson"
 import ClusterSource from 'ol/source/Cluster';
+import HeatMapLayer from 'ol/layer/Heatmap';
 
 const App = () => {
   const [source, setSource] = useState(
@@ -250,10 +250,25 @@ let source2 = new ClusterSource({
       }),
     ];
   }
+  const heatMapLayer = new HeatMapLayer({
+    source: new VectorSource({
+      url: url,
+      format: new GeoJSON(),
+    }),
+    gradient: ['#00f', '#0ff', '#0f0', '#ff0', '#f00'],
+    weight: (feature) => {
+      var name = feature.getProperties().eventarr.time.length;
+      var magnitude = parseFloat(name);
+      return magnitude;
+    },
+    properties:{
+      id : 'heat-layer'
+    }
+  }); 
   useEffect(() => {
     map = new Map({
       target: mapElement.current,
-      layers: [tileLayer, vectorLayer1, vectorLayer2, clusters],
+      layers: [tileLayer, vectorLayer1, vectorLayer2, heatMapLayer, clusters],
       view: mapView,
       controls: functions,
     });
